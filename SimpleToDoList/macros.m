@@ -1,15 +1,13 @@
 //
-//  ViewController.h
+//  macros.m
 //  SimpleToDoList
 //
 //  Created by Luke Gao on 10/4/18.
 //  Copyright © 2018 Luke Gao. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import "macros.h"
 
-@interface ViewController : UIViewController
-
+@implementation macros
 
 @end
-
