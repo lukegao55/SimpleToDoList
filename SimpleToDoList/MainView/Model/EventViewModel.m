@@ -25,7 +25,7 @@
 
 @property (nonatomic, assign) EventImportanceLevel importanceLevel;
 
-@property (nonatomic, strong) NSString *placeholder;
+@property (nonatomic, strong) NSString *placeholder; // Placeholder for input text field of event name
 
 @property (nonatomic, assign) BOOL isRevised;
 
@@ -33,29 +33,38 @@
 
 @implementation EventViewModel
 
-#pragma mark - Functionality
 
 - (instancetype)init {
     self = [super init];
     if (self) {
+        // Add observer
         [self addKVO];
     }
     return self;
 }
 
+- (void)dealloc {
+    // Remove observer
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+#pragma mark - Functionality
+
 - (void)editBtnPressed:(UIButton *)sender {
     if ([sender.superview isKindOfClass:[EventView class]]) {
         EventView *view = (EventView *)sender.superview;
-        NSIndexPath *idxPath1 = [NSIndexPath indexPathForRow:0 inSection:0]; // Event Name
-        NSIndexPath *idxPath2 = [NSIndexPath indexPathForRow:0 inSection:1]; // Memo
+        NSIndexPath *idxPath1 = [NSIndexPath indexPathForRow:0 inSection:0]; // Eventname cell
+        NSIndexPath *idxPath2 = [NSIndexPath indexPathForRow:0 inSection:1]; // Memo cell
         if (view.type == EventViewTypeNew) {
-            [[view.eventInfoTableView delegate] tableView:view.eventInfoTableView didDeselectRowAtIndexPath:idxPath1];
+            [[view.eventInfoTableView delegate] tableView:view.eventInfoTableView didDeselectRowAtIndexPath:idxPath1]; // Deselect all input cell
             [[view.eventInfoTableView delegate] tableView:view.eventInfoTableView didDeselectRowAtIndexPath:idxPath2];
+            // If eventname is empty, toast
             if (self.eventName.length == 0) {
                 UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error" message:@"Enter a name!" preferredStyle:UIAlertControllerStyleAlert];
                 [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alert animated:YES completion:nil];
                 [NSTimer scheduledTimerWithTimeInterval:1.0f target:self selector:@selector(dismissAlert) userInfo:nil repeats:NO];
             } else {
+                // Save event
                 NSDictionary *eventDic = [NSDictionary dictionaryWithObjectsAndKeys:self.eventName,kEventName,self.hour,kHour,self.min,kMin,self.memo,kMemo,@(self.importanceLevel),kImportanceLevel,@(self.timestamp),kTimestamp, nil];
                 if (![[NSUserDefaults standardUserDefaults] objectForKey:@"events"]) {
                     NSMutableArray *eventArray = [[NSMutableArray alloc] initWithObjects:eventDic, nil];
@@ -65,6 +74,7 @@
                     [eventArray addObject:eventDic];
                     [[NSUserDefaults standardUserDefaults] setObject:eventArray forKey:@"events"];
                 }
+                // Setup UI
                 if ([sender.superview isKindOfClass:[EventView class]]) {
                     EventView *view = (EventView *)sender.superview;
                     [UIView animateWithDuration:0.5 animations:^{
@@ -86,20 +96,25 @@
             view.eventInfoTableView.userInteractionEnabled = YES;
             if (!self.isRevised) {
                 self.isRevised = YES;
+                // Select event name cell
                 [[view.eventInfoTableView delegate] tableView:view.eventInfoTableView didSelectRowAtIndexPath:idxPath1];
             } else {
+                // Deselect all input cell
                 [[view.eventInfoTableView delegate] tableView:view.eventInfoTableView didDeselectRowAtIndexPath:idxPath1];
                 [[view.eventInfoTableView delegate] tableView:view.eventInfoTableView didDeselectRowAtIndexPath:idxPath2];
                 if (self.eventName.length == 0) {
+                    // If eventname is empty, toast
                     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error" message:@"Enter a name!" preferredStyle:UIAlertControllerStyleAlert];
                     [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alert animated:YES completion:nil];
                     [NSTimer scheduledTimerWithTimeInterval:1.0f target:self selector:@selector(dismissAlert) userInfo:nil repeats:NO];
                 } else {
+                    // Update event
                     NSDictionary *eventDic = [NSDictionary dictionaryWithObjectsAndKeys:self.eventName,kEventName,self.hour,kHour,self.min,kMin,self.memo,kMemo,@(self.importanceLevel),kImportanceLevel,@(self.timestamp),kTimestamp, nil];
                     NSMutableArray *eventArray = [[[NSUserDefaults standardUserDefaults] objectForKey:@"events"] mutableCopy];
                     NSUInteger idx = [eventArray indexOfObject:self.selectedEvent];
                     [eventArray replaceObjectAtIndex:idx withObject:eventDic];
                     [[NSUserDefaults standardUserDefaults] setObject:eventArray forKey:@"events"];
+                    // Setup UI
                     if ([sender.superview isKindOfClass:[EventView class]]) {
                         EventView *view = (EventView *)sender.superview;
                         [UIView animateWithDuration:0.5 animations:^{
@@ -201,6 +216,7 @@
 # pragma mark - KVO
 
 - (void)addKVO {
+    // Keyboard notification
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShowNotification:) name:UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHideNotification:) name:UIKeyboardWillHideNotification object:nil];
 }
@@ -212,7 +228,6 @@
             CGRect orginalFrame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
             CGRect keyboardRect = [[notification.userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
             mainVC.eventView.frame = CGRectMake(orginalFrame.origin.x, orginalFrame.origin.y - keyboardRect.size.height, orginalFrame.size.width, orginalFrame.size.height);
-            
         }
     }
 }

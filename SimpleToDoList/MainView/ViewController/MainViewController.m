@@ -26,6 +26,8 @@
 
 @implementation EventTableViewCell
 
+#pragma mark - Life Cycle
+
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
@@ -33,6 +35,8 @@
     }
     return self;
 }
+
+#pragma mark - Functionality
 
 - (void)setupUI {
     // Subviews
@@ -88,6 +92,8 @@
     self.timeLabel.text = [NSString stringWithFormat:@"%@:%@", hour, min];
     self.nameLabel.text = eventName;
 }
+
+#pragma mark - Lazy Loading
 
 - (UILabel *)importanceLabel {
     if (!_importanceLabel) {
@@ -205,18 +211,13 @@
     [self.eventTableView reloadData];
 }
 
-// What: check if two timestamps are in same day
-// Where: https://www.jianshu.com/p/cdf65d28be7c
-// Why: need to implement logic to clean up the event that is created by yesterday
-
-- (BOOL)isSameDay:(double)time1 Time2:(double)time2
-{
+- (BOOL)isSameDay:(double)time1 Time2:(double)time2 {
     NSDate *pDate1 = [NSDate dateWithTimeIntervalSince1970:time1 / 1000];
     NSDate *pDate2 = [NSDate dateWithTimeIntervalSince1970:time2 / 1000];
     NSCalendar* calendar = [NSCalendar currentCalendar];
     unsigned unitFlags = NSCalendarUnitYear | NSCalendarUnitMonth |  NSCalendarUnitDay;
-    NSDateComponents* comp1 = [calendar components:unitFlags fromDate:pDate1];
-    NSDateComponents* comp2 = [calendar components:unitFlags fromDate:pDate2];
+    NSDateComponents *comp1 = [calendar components:unitFlags fromDate:pDate1];
+    NSDateComponents *comp2 = [calendar components:unitFlags fromDate:pDate2];
     return [comp1 day]   == [comp2 day] && [comp1 month] == [comp2 month] && [comp1 year]  == [comp2 year];
 }
 
@@ -335,6 +336,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (section == 0) {
+        // If there is no todos, then leave one cell to indicate.
         return self.eventArray.count == 0 ? 1:self.eventArray.count;
     } else if (section == 1) {
         return self.finishedEventArray.count;
@@ -371,6 +373,7 @@
 #pragma mark - UITableView Delegate
 
 - (NSArray<UITableViewRowAction *> *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Delete action
     UITableViewRowAction *action1 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDestructive title:@"Delete" handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
         if (indexPath.section == 0) {
             [self.eventArray removeObjectAtIndex:indexPath.row];
@@ -379,20 +382,29 @@
             [self.finishedEventArray removeObjectAtIndex:indexPath.row];
             [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
         }
-        [tableView reloadData];
+        [self reloadData];
     }];
+    // Finish action
     UITableViewRowAction *action2 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleNormal title:@"Done!" handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
         [self.finishedEventArray addObject:self.eventArray[indexPath.row]];
         [self.eventArray removeObjectAtIndex:indexPath.row];
         [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
         [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
-        [tableView reloadData];
+        [self reloadData];
+    }];
+    // Unfinish action
+    UITableViewRowAction *action3 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleNormal title:@"Redo" handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
+        [self.eventArray addObject:self.finishedEventArray[indexPath.row]];
+        [self.finishedEventArray removeObjectAtIndex:indexPath.row];
+        [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
+        [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
+        [self reloadData];
     }];
     action2.backgroundColor = [UIColor blueColor];
     if (indexPath.section == 0) {
         return @[action1,action2];
     } else {
-        return @[action1];
+        return @[action1,action3];
     }
 }
 

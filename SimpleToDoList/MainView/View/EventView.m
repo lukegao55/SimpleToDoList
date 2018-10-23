@@ -22,6 +22,7 @@
 @implementation EventView
 
 #pragma mark - Lift Cycle
+
 - (instancetype)initWithType:(EventViewType)type {
     self = [super init];
     if (self) {

@@ -19,10 +19,14 @@
 
 @implementation EventInfoTableViewCell
 
+#pragma mark - Life Cycle
+
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     return self;
 }
+
+#pragma mark - Functionality
 
 - (void)setupUIWithType:(EventInfoTableViewCellType)type {
     self.type = type;
@@ -69,6 +73,8 @@
     }
 }
 
+#pragma mark - Lazy Loading
+
 - (UILabel *)titleLabel {
     if (!_titleLabel) {
         _titleLabel = [[UILabel alloc] init];
@@ -106,6 +112,5 @@
 + (NSString *)reuseIdentifier {
     return NSStringFromClass(self.class);
 }
-
 
 @end

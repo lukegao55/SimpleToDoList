@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MainViewController : UIViewController
 
-@property (nonatomic, strong) CALayer *maskLayer;
+@property (nonatomic, strong) CALayer *maskLayer; // Mask for the window when event view is presented
 
 @property (nonatomic, strong) EventView *eventView;
 

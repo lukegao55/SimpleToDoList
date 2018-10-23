@@ -13,8 +13,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, EventViewType) {
-    EventViewTypeNew = 0,
-    EventViewTypeCheck = 2
+    EventViewTypeNew = 0, // Access from add event button
+    EventViewTypeCheck = 1 // Access from cell info button
 };
 
 @interface EventView : UIView

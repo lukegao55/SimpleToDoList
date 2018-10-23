@@ -10,7 +10,7 @@
 
 #define DEVICE_WIDTH    [UIScreen mainScreen].bounds.size.width
 #define DEVICE_HEIGHT   [UIScreen mainScreen].bounds.size.height
-#define IS_IPHONEX [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone && UIScreen.mainScreen.nativeBounds.size.height == 2436
+#define IS_IPHONEX [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone && @available(iOS 11.0, *) && [[[UIApplication sharedApplication] delegate] window].safeAreaInsets.bottom > 0.0
 #define kEventName @"EVENTNAME"
 #define kHour @"HOUR"
 #define kMin @"MIN"
