@@ -8,5 +8,5 @@ Check it out if you want.
 
 If you only have 2 hrs left for your homework, your life saver is here.
 
-<img src = "https://github.com/lukegao55/SimpleToDoList/blob/master/Demo/demo.gif" width = 375 height = 812>
+<img src = "https://github.com/lukegao55/SimpleToDoList/blob/master/Demo/demo.gif" width = "50%" height = "50%">
 
