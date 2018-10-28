@@ -21,7 +21,9 @@ typedef NS_ENUM(NSUInteger, EventInfoTableViewCellType) {
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *detailLabel;
+
 @property (nonatomic, strong) UITextField *inputTextField;
+
 @property (nonatomic, strong) UITextView *inputTextView;
 
 

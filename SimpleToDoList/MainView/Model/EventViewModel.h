@@ -15,9 +15,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) NSDictionary *selectedEvent;
 
-- (void)editBtnPressed:(UIButton *)sender;
+- (void)cleanupData;
 
-- (void)dismissBtnPressed:(UIButton *)sender;
+- (NSArray *)retrieveDataWithKey:(NSString *)key;
+
+- (void)editBtnPressed:(UIButton *)sender;
 
 @end
 

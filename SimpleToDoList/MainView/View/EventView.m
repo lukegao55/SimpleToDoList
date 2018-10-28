@@ -8,6 +8,7 @@
 
 #import "EventView.h"
 #import "EventInfoTableViewCell.h"
+#import "MainViewController.h"
 #import "macros.h"
 #import <Masonry.h>
 
@@ -15,6 +16,7 @@
 @interface EventView()
 
 @property (nonatomic, strong) UILabel *titleLabel;
+
 @property (nonatomic, strong) UIButton *dismissBtn;
 
 @end
@@ -27,9 +29,22 @@
     self = [super init];
     if (self) {
         self.type = type;
+        [self addKVO];
         [self setupUI];
     }
     return self;
+}
+
+# pragma mark - KVO
+
+- (void)addKVO {
+    // Keyboard notification
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillShowNotification:) name:UIKeyboardWillShowNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillHideNotification:) name:UIKeyboardWillHideNotification
+                                               object:nil];
 }
 
 #pragma mark - Functionality
@@ -61,6 +76,56 @@
         make.left.equalTo(self.eventInfoTableView).offset(20);
         make.right.equalTo(self.eventInfoTableView).offset(-20);
     }];
+}
+
+- (void)dismissBtnPressed:(UIButton *)sender {
+    [UIView animateWithDuration:0.5
+                     animations:^{
+                         self.frame = CGRectMake(0, DEVICE_HEIGHT, DEVICE_WIDTH, DEVICE_HEIGHT);
+                     }
+                     completion:^(BOOL finished) {
+                         [self removeFromSuperview];
+                     }];
+    if ([self.parentVC isKindOfClass:[MainViewController class]]) {
+        MainViewController *vc = (MainViewController *)self.parentVC;
+        [vc reloadData];
+        [vc.maskLayer removeFromSuperlayer];
+        [vc.navigationController.navigationBar setUserInteractionEnabled:YES];
+        [vc.navigationController.navigationBar setHidden:NO];
+    }
+}
+
+- (void)updateUIAfterSaving {
+        [UIView animateWithDuration:0.5
+                         animations:^{
+                             self.frame = CGRectMake(0, DEVICE_HEIGHT, DEVICE_WIDTH, DEVICE_HEIGHT);
+                         }
+                         completion:^(BOOL finished) {
+                             [self removeFromSuperview];
+                         }];
+        if ([self.parentVC isKindOfClass:[MainViewController class]]) {
+            MainViewController *vc = (MainViewController *)self.parentVC;
+            [vc reloadData];
+            [vc.maskLayer removeFromSuperlayer];
+            [vc.navigationController.navigationBar setUserInteractionEnabled:YES];
+            [vc.navigationController.navigationBar setHidden:NO];
+        }
+}
+
+- (void)keyboardWillShowNotification:(NSNotification *)notification {
+    if ([self.parentVC isKindOfClass:[MainViewController class]]) {
+        MainViewController *mainVC = (MainViewController *)self.parentVC;
+        CGRect orginalFrame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
+        CGRect keyboardRect = [[notification.userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+        mainVC.eventView.frame = CGRectMake(orginalFrame.origin.x, orginalFrame.origin.y - keyboardRect.size.height, orginalFrame.size.width, orginalFrame.size.height);
+    }
+}
+
+- (void)keyboardWillHideNotification:(NSNotification *)notification {
+    if ([self.parentVC isKindOfClass:[MainViewController class]]) {
+        MainViewController *mainVC = (MainViewController *)self.parentVC;
+        mainVC.eventView.frame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
+    }
 }
 
 #pragma mark - Lazy Loading
@@ -96,7 +161,9 @@
         [_editBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [_editBtn setBackgroundColor:[UIColor colorWithRed:51 / 255.f green:161 / 255.f blue:201 / 255.f alpha:1]];
         _editBtn.titleLabel.font = [UIFont systemFontOfSize:20 weight:UIFontWeightBlack];
-        [_editBtn addTarget:self.viewModel action:@selector(editBtnPressed:) forControlEvents:UIControlEventTouchUpInside];
+        [_editBtn addTarget:self.viewModel
+                     action:@selector(editBtnPressed:)
+           forControlEvents:UIControlEventTouchUpInside];
     }
     return _editBtn;
 }
@@ -107,7 +174,9 @@
         [_dismissBtn setTitle:@"X" forState:UIControlStateNormal];
         [_dismissBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         _dismissBtn.titleLabel.font = [UIFont systemFontOfSize:18];
-        [_dismissBtn addTarget:self.viewModel action:@selector(dismissBtnPressed:) forControlEvents:UIControlEventTouchUpInside];
+        [_dismissBtn addTarget:self
+                        action:@selector(dismissBtnPressed:)
+              forControlEvents:UIControlEventTouchUpInside];
     }
     return _dismissBtn;
 }
@@ -115,7 +184,8 @@
 - (UITableView *)eventInfoTableView {
     if (!_eventInfoTableView) {
         _eventInfoTableView = [[UITableView alloc] init];
-        [_eventInfoTableView registerClass:[EventInfoTableViewCell class] forCellReuseIdentifier:[EventInfoTableViewCell reuseIdentifier]];
+        [_eventInfoTableView registerClass:[EventInfoTableViewCell class]
+                    forCellReuseIdentifier:[EventInfoTableViewCell reuseIdentifier]];
         _eventInfoTableView.scrollEnabled = NO;
         _eventInfoTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         _eventInfoTableView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;

@@ -31,6 +31,8 @@ typedef NS_ENUM(NSUInteger, EventViewType) {
 
 - (instancetype)initWithType:(EventViewType)type;
 
+- (void)updateUIAfterSaving;
+
 @end
 
 NS_ASSUME_NONNULL_END

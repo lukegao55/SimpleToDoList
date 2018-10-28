@@ -9,127 +9,14 @@
 #import "MainViewController.h"
 #import "EventView.h"
 #import "EventModel.h"
+#import "EventTableViewCell.h"
 #import "EventInfoTableViewCell.h"
 #import "macros.h"
 #import <Masonry.h>
 
-#pragma mark - EventTableViewCell
-
-@interface EventTableViewCell : UITableViewCell
-
-@property (nonatomic, strong) UILabel *importanceLabel;
-@property (nonatomic, strong) UILabel *timeLabel;
-@property (nonatomic, strong) UILabel *nameLabel;
-@property (nonatomic, strong) UIButton *infoBtn;
-
-@end
-
-@implementation EventTableViewCell
-
-#pragma mark - Life Cycle
-
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
-        [self setupUI];
-    }
-    return self;
-}
-
-#pragma mark - Functionality
-
-- (void)setupUI {
-    // Subviews
-    [self.contentView addSubview:self.importanceLabel];
-    [self.contentView addSubview:self.timeLabel];
-    [self.contentView addSubview:self.nameLabel];
-    [self.contentView addSubview:self.infoBtn];
-    
-    // Layout
-    [self.importanceLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.equalTo(self);
-        make.left.equalTo(@(20));
-        make.width.equalTo(@(10));
-        make.height.equalTo(@(10));
-    }];
-    [self.timeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.equalTo(self.importanceLabel);
-        make.left.equalTo(self.importanceLabel.mas_right).offset(20);
-    }];
-    [self.nameLabel mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.equalTo(self.importanceLabel);
-        make.left.equalTo(self.timeLabel.mas_right).offset(20);
-        make.right.lessThanOrEqualTo(self.infoBtn.mas_left);
-    }];
-    [self.infoBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.equalTo(self.importanceLabel);
-        make.right.equalTo(self.contentView).offset(-20);
-    }];
-}
-
-- (void)configCellWitlEventDic:(NSDictionary *)eventDic {
-    self.importanceLabel.hidden = NO;
-    self.timeLabel.hidden = NO;
-    self.nameLabel.hidden = NO;
-    self.infoBtn.hidden = NO;
-    EventImportanceLevel importanceLevel = [[eventDic objectForKey:kImportanceLevel] integerValue];
-    switch (importanceLevel) {
-        case EventImportanceLevelNormal:
-            self.importanceLabel.backgroundColor = [UIColor clearColor];
-            break;
-        case EventImportanceLevelImportant:
-            self.importanceLabel.backgroundColor = [UIColor yellowColor];
-            break;
-        case EventImportanceLevelVeryImportant:
-            self.importanceLabel.backgroundColor = [UIColor redColor];
-            break;
-        default:
-            break;
-    }
-    NSString *hour = [eventDic objectForKey:kHour];
-    NSString *min = [eventDic objectForKey:kMin];
-    NSString *eventName = [eventDic objectForKey:kEventName];
-    self.timeLabel.text = [NSString stringWithFormat:@"%@:%@", hour, min];
-    self.nameLabel.text = eventName;
-}
-
-#pragma mark - Lazy Loading
-
-- (UILabel *)importanceLabel {
-    if (!_importanceLabel) {
-        _importanceLabel = [[UILabel alloc] init];
-    }
-    return _importanceLabel;
-}
-
-- (UILabel *)timeLabel {
-    if (!_timeLabel) {
-        _timeLabel = [[UILabel alloc] init];
-    }
-    return _timeLabel;
-}
-
-- (UILabel *)nameLabel {
-    if (!_nameLabel) {
-        _nameLabel = [[UILabel alloc] init];
-    }
-    return _nameLabel;
-}
-
-- (UIButton *)infoBtn {
-    if (!_infoBtn) {
-        _infoBtn = [UIButton buttonWithType:UIButtonTypeInfoLight];
-    }
-    return _infoBtn;
-}
-
-+ (NSString *)reuseIdentifier {
-    return NSStringFromClass(self.class);
-}
-
-@end
-
 @interface MainViewController () <UITableViewDelegate, UITableViewDataSource>
+
+@property (nonatomic, strong) EventViewModel *viewModel;
 
 @property (nonatomic, strong) UITableView *eventTableView;
 
@@ -147,44 +34,26 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    [self cleanData];
     [self setupData];
     [self setupUI];
-    
 }
 
 #pragma mark - Functionality
 
-- (void)cleanData {
-    // Clean up any event that is planned at 24 hr ago
-    self.eventArray = [[[NSUserDefaults standardUserDefaults] objectForKey:@"events"] mutableCopy];
-    self.finishedEventArray = [[[NSUserDefaults standardUserDefaults] objectForKey:@"finishedEvents"] mutableCopy];
-    NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
-    [self.eventArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSTimeInterval eventTime = [[obj objectForKey:kTimestamp] doubleValue];
-        if (![self isSameDay:eventTime Time2:currentTime]) {
-            [self.eventArray removeObject:obj];
-        }
-    }];
-    [self.finishedEventArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSTimeInterval eventTime = [[obj objectForKey:kTimestamp] doubleValue];
-        if (![self isSameDay:eventTime Time2:currentTime]) {
-            [self.finishedEventArray removeObject:obj];
-        }
-    }];
-    [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
-    [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
-}
-
 - (void)setupData {
-    self.eventArray = [[[NSUserDefaults standardUserDefaults] objectForKey:@"events"] mutableCopy];
-    self.finishedEventArray = [[[NSUserDefaults standardUserDefaults] objectForKey:@"finishedEvents"] mutableCopy];
-    self.eventArray = [NSMutableArray arrayWithArray: [self.eventArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return [[obj1 valueForKey:kTimestamp] compare:[obj2 valueForKey:kTimestamp]];
-    }]];
-    self.finishedEventArray = [NSMutableArray arrayWithArray: [self.finishedEventArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        return [[obj1 valueForKey:kTimestamp] compare:[obj2 valueForKey:kTimestamp]];
-    }]];
+    [self.viewModel cleanupData];
+    self.eventArray = [[self.viewModel retrieveDataWithKey:kEvent] mutableCopy];
+    self.finishedEventArray = [[self.viewModel retrieveDataWithKey:kFinishedEvent] mutableCopy];
+    if (self.eventArray) {
+        self.eventArray = [NSMutableArray arrayWithArray: [self.eventArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            return [[obj1 valueForKey:kTimestamp] compare:[obj2 valueForKey:kTimestamp]];
+        }]];
+    }
+    if (self.finishedEventArray) {
+        self.finishedEventArray = [NSMutableArray arrayWithArray: [self.finishedEventArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            return [[obj1 valueForKey:kTimestamp] compare:[obj2 valueForKey:kTimestamp]];
+        }]];
+    }
 }
 
 - (void)setupUI {
@@ -193,11 +62,12 @@
     self.navigationItem.rightBarButtonItem = self.addEventBtn;
     // Subviews
     [self.view addSubview:self.eventTableView];
-    
     // Layout
     [self.eventTableView mas_makeConstraints:^(MASConstraintMaker *make) {
-        if (IS_IPHONEX) {
-            make.top.equalTo(self.view).offset(88);
+        if (@available(iOS 11.0, *)) {
+            if (IS_IPHONEX) {
+                make.top.equalTo(self.view).offset(88);
+            }
         } else {
             make.top.equalTo(self.view).offset(64);
         }
@@ -211,26 +81,17 @@
     [self.eventTableView reloadData];
 }
 
-- (BOOL)isSameDay:(double)time1 Time2:(double)time2 {
-    NSDate *pDate1 = [NSDate dateWithTimeIntervalSince1970:time1 / 1000];
-    NSDate *pDate2 = [NSDate dateWithTimeIntervalSince1970:time2 / 1000];
-    NSCalendar* calendar = [NSCalendar currentCalendar];
-    unsigned unitFlags = NSCalendarUnitYear | NSCalendarUnitMonth |  NSCalendarUnitDay;
-    NSDateComponents *comp1 = [calendar components:unitFlags fromDate:pDate1];
-    NSDateComponents *comp2 = [calendar components:unitFlags fromDate:pDate2];
-    return [comp1 day]   == [comp2 day] && [comp1 month] == [comp2 month] && [comp1 year]  == [comp2 year];
-}
-
 - (void)addEventBtnPressed:(UIBarButtonItem *)sender {
-    [self.eventView removeFromSuperview];
+    [self.eventView removeFromSuperview];  // In case of press add multiple times to generate too many views
     self.eventView = [[EventView alloc] initWithType:EventViewTypeNew];
      self.eventView.parentVC = self;
     [self.view addSubview: self.eventView];
     [self.view.layer insertSublayer:self.maskLayer below:self.eventView.layer];
      self.eventView.frame = CGRectMake(0, DEVICE_HEIGHT, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
-    [UIView animateWithDuration:0.5 animations:^{
-         self.eventView.frame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
-    }];
+    [UIView animateWithDuration:0.5
+                     animations:^{
+                            self.eventView.frame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
+                     }];
     [self.navigationController.navigationBar setUserInteractionEnabled:NO];
     [self.navigationController.navigationBar setHidden:YES];
 }
@@ -254,15 +115,23 @@
         [self.view addSubview:self.eventView];
         [self.view.layer insertSublayer:self.maskLayer below:self.eventView.layer];
         self.eventView.frame = CGRectMake(0, DEVICE_HEIGHT, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
-        [UIView animateWithDuration:0.5 animations:^{
-            self.eventView.frame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
-        }];
+        [UIView animateWithDuration:0.5
+                         animations:^{
+                             self.eventView.frame = CGRectMake(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH, DEVICE_HEIGHT / 2);
+                         }];
         [self.navigationController.navigationBar setUserInteractionEnabled:NO];
         [self.navigationController.navigationBar setHidden:YES];
     }
 }
 
 #pragma mark - Lazy Loading
+
+- (EventViewModel *)viewModel {
+    if (!_viewModel) {
+        _viewModel = [[EventViewModel alloc] init];
+    }
+    return _viewModel;
+}
 
 - (UITableView *)eventTableView {
     if (!_eventTableView) {
@@ -349,9 +218,11 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    EventTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:[EventTableViewCell reuseIdentifier] forIndexPath:indexPath];
+    EventTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:[EventTableViewCell reuseIdentifier]
+                                                               forIndexPath:indexPath];
     if (!cell) {
-        cell = [[EventTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:[EventTableViewCell reuseIdentifier]];
+        cell = [[EventTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                         reuseIdentifier:[EventTableViewCell reuseIdentifier]];
     }
     if (indexPath.section == 0) {
         if (self.eventArray.count == 0) {
@@ -365,41 +236,49 @@
     } else if (indexPath.section == 1) {
         [cell configCellWitlEventDic:self.finishedEventArray[indexPath.row]];
     }
-    [cell.infoBtn addTarget:self action:@selector(cellInfoBtnPressed:) forControlEvents:UIControlEventTouchUpInside];
+    [cell.infoBtn addTarget:self
+                     action:@selector(cellInfoBtnPressed:)
+           forControlEvents:UIControlEventTouchUpInside];
     cell.infoBtn.userInteractionEnabled = YES;
     return cell;
 }
 
 #pragma mark - UITableView Delegate
 
-- (NSArray<UITableViewRowAction *> *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (NSArray <UITableViewRowAction *> *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Delete action
-    UITableViewRowAction *action1 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDestructive title:@"Delete" handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
-        if (indexPath.section == 0) {
-            [self.eventArray removeObjectAtIndex:indexPath.row];
-            [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
-        } else if (indexPath.section == 1) {
-            [self.finishedEventArray removeObjectAtIndex:indexPath.row];
-            [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
-        }
-        [self reloadData];
-    }];
+    UITableViewRowAction *action1 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDestructive
+                                                                       title:@"Delete"
+                                                                     handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
+                                                                         if (indexPath.section == 0) {
+                                                                             [self.eventArray removeObjectAtIndex:indexPath.row];
+                                                                             [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
+                                                                         } else if (indexPath.section == 1) {
+                                                                             [self.finishedEventArray removeObjectAtIndex:indexPath.row];
+                                                                             [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
+                                                                         }
+                                                                         [self reloadData];
+                                                                     }];
     // Finish action
-    UITableViewRowAction *action2 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleNormal title:@"Done!" handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
-        [self.finishedEventArray addObject:self.eventArray[indexPath.row]];
-        [self.eventArray removeObjectAtIndex:indexPath.row];
-        [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
-        [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
-        [self reloadData];
-    }];
+    UITableViewRowAction *action2 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleNormal
+                                                                       title:@"Done!"
+                                                                     handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
+                                                                         [self.finishedEventArray addObject:self.eventArray[indexPath.row]];
+                                                                         [self.eventArray removeObjectAtIndex:indexPath.row];
+                                                                         [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
+                                                                         [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
+                                                                         [self reloadData];
+                                                                     }];
     // Unfinish action
-    UITableViewRowAction *action3 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleNormal title:@"Redo" handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
-        [self.eventArray addObject:self.finishedEventArray[indexPath.row]];
-        [self.finishedEventArray removeObjectAtIndex:indexPath.row];
-        [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
-        [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
-        [self reloadData];
-    }];
+    UITableViewRowAction *action3 = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleNormal
+                                                                       title:@"Redo"
+                                                                     handler:^(UITableViewRowAction * _Nonnull action, NSIndexPath * _Nonnull indexPath) {
+                                                                         [self.eventArray addObject:self.finishedEventArray[indexPath.row]];
+                                                                         [self.finishedEventArray removeObjectAtIndex:indexPath.row];
+                                                                         [[NSUserDefaults standardUserDefaults] setObject:self.eventArray forKey:@"events"];
+                                                                         [[NSUserDefaults standardUserDefaults] setObject:self.finishedEventArray forKey:@"finishedEvents"];
+                                                                         [self reloadData];
+                                                                     }];
     action2.backgroundColor = [UIColor blueColor];
     if (indexPath.section == 0) {
         return @[action1,action2];
@@ -409,6 +288,7 @@
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    // No edit action when there is no events
     if (indexPath.section == 0 && self.eventArray.count == 0) {
         return NO;
     } 

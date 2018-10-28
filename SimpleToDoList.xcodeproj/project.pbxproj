@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		402429CB2186612600219F8D /* EventTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 402429CA2186612600219F8D /* EventTableViewCell.m */; };
 		408661602166D1FC00C5076D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4086615F2166D1FC00C5076D /* AppDelegate.m */; };
 		408661662166D1FC00C5076D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 408661642166D1FC00C5076D /* Main.storyboard */; };
 		408661682166D1FE00C5076D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 408661672166D1FE00C5076D /* Assets.xcassets */; };
@@ -23,6 +24,8 @@
 
 /* Begin PBXFileReference section */
 		00717F11618E70FEB0F8A833 /* Pods-SimpleToDoList.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SimpleToDoList.release.xcconfig"; path = "Pods/Target Support Files/Pods-SimpleToDoList/Pods-SimpleToDoList.release.xcconfig"; sourceTree = "<group>"; };
+		402429C92186612600219F8D /* EventTableViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventTableViewCell.h; sourceTree = "<group>"; };
+		402429CA2186612600219F8D /* EventTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EventTableViewCell.m; sourceTree = "<group>"; };
 		4086615B2166D1FC00C5076D /* SimpleToDoList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleToDoList.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4086615E2166D1FC00C5076D /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		4086615F2166D1FC00C5076D /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -59,6 +62,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		402429CC2186773E00219F8D /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				408661872166DE8C00C5076D /* macros.h */,
+				408661882166DE8C00C5076D /* macros.m */,
+			);
+			path = "Support Files";
+			sourceTree = "<group>";
+		};
 		408661522166D1FC00C5076D = {
 			isa = PBXGroup;
 			children = (
@@ -80,6 +92,7 @@
 		4086615D2166D1FC00C5076D /* SimpleToDoList */ = {
 			isa = PBXGroup;
 			children = (
+				402429CC2186773E00219F8D /* Support Files */,
 				408661742166D37600C5076D /* MainView */,
 				4086615E2166D1FC00C5076D /* AppDelegate.h */,
 				4086615F2166D1FC00C5076D /* AppDelegate.m */,
@@ -88,8 +101,6 @@
 				408661692166D1FE00C5076D /* LaunchScreen.storyboard */,
 				4086616C2166D1FE00C5076D /* Info.plist */,
 				4086616D2166D1FE00C5076D /* main.m */,
-				408661872166DE8C00C5076D /* macros.h */,
-				408661882166DE8C00C5076D /* macros.m */,
 			);
 			path = SimpleToDoList;
 			sourceTree = "<group>";
@@ -120,6 +131,8 @@
 				4086619821692DBA00C5076D /* EventView.m */,
 				408F53862169328300949C71 /* EventInfoTableViewCell.h */,
 				408F53872169328300949C71 /* EventInfoTableViewCell.m */,
+				402429C92186612600219F8D /* EventTableViewCell.h */,
+				402429CA2186612600219F8D /* EventTableViewCell.m */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -250,6 +263,7 @@
 			files = (
 				408F53882169328300949C71 /* EventInfoTableViewCell.m in Sources */,
 				4086619921692DBA00C5076D /* EventView.m in Sources */,
+				402429CB2186612600219F8D /* EventTableViewCell.m in Sources */,
 				408F538221692F8800949C71 /* EventViewModel.m in Sources */,
 				408661892166DE8C00C5076D /* macros.m in Sources */,
 				4086616E2166D1FE00C5076D /* main.m in Sources */,

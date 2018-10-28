@@ -21,7 +21,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)cellInfoBtnPressed:(UIButton *)sender;
 
-
 @end
 
 NS_ASSUME_NONNULL_END
